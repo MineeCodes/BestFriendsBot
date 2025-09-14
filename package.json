@@ -1,0 +1,19 @@
+{
+  "name": "bestfriendsbot",
+  "version": "1.0.0",
+  "description": "Bot t làm khi chán",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MineeCodes/BestFriendsBot.git"
+  },
+  "author": "Mineturtlee & T.H.",
+  "license": "WTFPL",
+  "bugs": {
+    "url": "https://github.com/MineeCodes/BestFriendsBot/issues"
+  },
+  "homepage": "https://github.com/MineeCodes/BestFriendsBot#readme"
+}
