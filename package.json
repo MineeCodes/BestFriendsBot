@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/MineeCodes/BestFriendsBot/issues"
   },
-  "homepage": "https://github.com/MineeCodes/BestFriendsBot#readme"
+  "homepage": "https://github.com/MineeCodes/BestFriendsBot#readme",
+  "dependencies": {
+    "discord.js": "^14.22.1"
+  }
 }
