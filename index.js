@@ -1,7 +1,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, Collection, Events, GatewayIntentBits, MessageFlags } = require('discord.js');
-const { token } = require('./local/config.json')
+const { Client, Collection, Events, GatewayIntentBits, MessageFlags, REST, Routes } = require('discord.js');
+const config = require('./local/config.json');
+const { stringify } = require('node:querystring');
 
 const client = new Client({ intents: [
     GatewayIntentBits.GuildMembers,
@@ -9,30 +10,53 @@ const client = new Client({ intents: [
     GatewayIntentBits.MessageContent,
 ] });
 
-const commands = new Collection();
+client.commands = new Collection();
+client.commands.release = new Collection();
+client.commands.beta = new Collection();
 
-const foldersPath = path.join(__dirname, 'commands');
-const commandFolders = fs.readdirSync(foldersPath);
+const commandsRelease = [];
+const commandsBeta = [];
+const foldersPathRelease = path.join(__dirname, 'commands', 'release');
+const commandFoldersRelease = fs.readdirSync(foldersPathRelease);
+const foldersPathBeta = path.join(__dirname, 'commands', 'beta');
+const commandFoldersBeta = fs.readdirSync(foldersPathBeta)
 
-for (const folder of commandFolders) {
-	const commandsPath = path.join(foldersPath, folder);
+for (const folder of commandFoldersRelease) {
+	const commandsPath = path.join(foldersPathRelease, folder);
 	const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 	for (const file of commandFiles) {
 		const filePath = path.join(commandsPath, file);
 		const command = require(filePath);
-		// Set a new item in the Collection with the key as the command name and the value as the exported module
 		if ('data' in command && 'execute' in command) {
-			client.commands.set(command.data.name, command);
+			commandsRelease.push(command.data.toJSON());
 		} else {
 			console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
 		}
 	}
 }
 
+for (const folder of commandFoldersBeta) {
+    const commandsPath = path.join(foldersPathBeta, folder);
+    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+    for (const file of commandFiles) {
+        const filePath = path.join(commandsPath, file);
+        const command = require(filePath);
+        if ('data' in command && 'execute' in command) {
+            commandsBeta.push(command.data.toJSON());
+        } else {
+            console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+        }
+    }
+}
+
 client.on(Events.InteractionCreate, async interaction => {
 	if (!interaction.isChatInputCommand()) return;
 
-	const command = interaction.client.commands.get(interaction.commandName);
+	try {
+        const command = interaction.client.commandsRelease.get(interaction.commandName);
+    } catch {
+        const command = interaction.client.commandsBeta.get(interaction.commandName);
+    }
 
 	if (!command) {
 		console.error(`No command matching ${interaction.commandName} was found.`);
@@ -40,7 +64,7 @@ client.on(Events.InteractionCreate, async interaction => {
 	}
 
 	try {
-		await command.execute(interaction);
+        await command.execute(interaction);
 	} catch (error) {
 		console.error(error);
 		if (interaction.replied || interaction.deferred) {
@@ -55,5 +79,38 @@ client.once(Events.ClientReady, readyClient => {
 	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
 });
 
-// Log in to Discord with your client's token
-client.login(token);
+const rest = new REST().setToken(config.token);
+const appId = config.app_id.toString();
+const devServerId = config.devserver.toString();
+
+(async () => {
+	try {
+		console.log(`Started refreshing ${commandsRelease.length} application commands.`);
+
+		const data = await rest.put(
+			Routes.applicationGuildCommands(appId),
+			{ body: commandsRelease },
+		);
+
+		console.log(`Successfully reloaded ${data.length} application commands.`);
+	} catch (error) {
+		console.error(error);
+	}
+})();
+
+(async () => {
+    try {
+        console.log(`Started refreshing ${commandsBeta.length} beta application commands.`);
+
+        const data = await rest.put(
+            Routes.applicationGuildCommands(appId, devServerId),
+            { body: commandsBeta },
+        );
+
+        console.log(`Successfully reloaded ${data.length} application commands.`);
+    } catch (error) {
+        console.error(error);
+    }
+})();
+
+client.login(config.token);
