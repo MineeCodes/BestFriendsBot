@@ -79,16 +79,19 @@ client.once(Events.ClientReady, readyClient => {
 	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
 });
 
+console.log('App ID:', config.app_id);      // should print the correct string
+console.log('Guild ID:', config.dev_server); // should print the correct string
+
+
 const rest = new REST().setToken(config.token);
 const appId = config.app_id.toString();
-const devServerId = config.devserver.toString();
 
 (async () => {
 	try {
 		console.log(`Started refreshing ${commandsRelease.length} application commands.`);
 
 		const data = await rest.put(
-			Routes.applicationGuildCommands(appId),
+			Routes.applicationCommands(appId),
 			{ body: commandsRelease },
 		);
 
@@ -103,11 +106,11 @@ const devServerId = config.devserver.toString();
         console.log(`Started refreshing ${commandsBeta.length} beta application commands.`);
 
         const data = await rest.put(
-            Routes.applicationGuildCommands(appId, devServerId),
+            Routes.applicationGuildCommands(appId, config.dev_server),
             { body: commandsBeta },
         );
 
-        console.log(`Successfully reloaded ${data.length} application commands.`);
+        console.log(`Successfully reloaded ${data.length} beta application commands.`);
     } catch (error) {
         console.error(error);
     }
