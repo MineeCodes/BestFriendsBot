@@ -29,6 +29,7 @@ for (const folder of commandFoldersRelease) {
 		const command = require(filePath);
 		if ('data' in command && 'execute' in command) {
 			commandsRelease.push(command.data.toJSON());
+			client.commands.release.set(command.data.name, command);
 		} else {
 			console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
 		}
@@ -43,6 +44,7 @@ for (const folder of commandFoldersBeta) {
         const command = require(filePath);
         if ('data' in command && 'execute' in command) {
             commandsBeta.push(command.data.toJSON());
+			client.commands.beta.set(command.data.name, command);
         } else {
             console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
         }
@@ -50,30 +52,34 @@ for (const folder of commandFoldersBeta) {
 }
 
 client.on(Events.InteractionCreate, async interaction => {
-	if (!interaction.isChatInputCommand()) return;
+    if (!interaction.isChatInputCommand()) return;
 
-	try {
-        const command = interaction.client.commandsRelease.get(interaction.commandName);
-    } catch {
-        const command = interaction.client.commandsBeta.get(interaction.commandName);
+    const command =
+        client.commands.release.get(interaction.commandName) ||
+        client.commands.beta.get(interaction.commandName);
+
+    if (!command) {
+        console.error(`No command matching ${interaction.commandName} was found.`);
+        return;
     }
 
-	if (!command) {
-		console.error(`No command matching ${interaction.commandName} was found.`);
-		return;
-	}
-
-	try {
+    try {
         await command.execute(interaction);
-	} catch (error) {
-		console.error(error);
-		if (interaction.replied || interaction.deferred) {
-			await interaction.followUp({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
-		} else {
-			await interaction.reply({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
-		}
-	}
+    } catch (error) {
+        console.error(`Error executing ${interaction.commandName}:`, error);
+        const replyOptions = {
+            content: 'There was an error while executing this command!',
+            ephemeral: true
+        };
+
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp(replyOptions);
+        } else {
+            await interaction.reply(replyOptions);
+        }
+    }
 });
+
 
 client.once(Events.ClientReady, readyClient => {
 	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
