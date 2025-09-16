@@ -1,4 +1,6 @@
 const { SlashCommandBuilder, MessageFlags } = require('discord.js')
+const { Database } = require('../../db.js');
+const { db_uri } = require('../../local/config.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -28,6 +30,9 @@ module.exports = {
     ),
 
     async execute(interaction) {
+        const db = await new Database(db_uri);
+        await db.connect(String(interaction.guildId));
+
         const subcommand = interaction.options.getSubcommand();
         if (subcommand === "addchannel") {
             const channel = interaction.options.getChannel("channel");
