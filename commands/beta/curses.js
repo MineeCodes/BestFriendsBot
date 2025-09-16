@@ -6,19 +6,19 @@ module.exports = {
     .setDescription("Các câu lệnh liên quan đến chửi lộn")
     .addSubcommand(subcommand =>
         subcommand
-        .setName("addChannel")
+        .setName("addchannel")
         .setDescription("Thêm kênh vào danh sách kênh chửi lộn")
         .addChannelOption(option => option.setName("channel").setDescription("Kênh muốn thêm").setRequired(true))
     )
     .addSubcommand(subcommand =>
         subcommand
-        .setName("removeChannel")
+        .setName("removechannel")
         .setDescription("Xóa kênh khỏi danh sách kênh chửi lộn")
         .addChannelOption(option => option.setName("channel").setDescription("Kênh muốn xóa").setRequired(true))
     )
     .addSubcommand(subcommand =>
         subcommand
-        .setName("listChannel")
+        .setName("listchannel")
         .setDescription("Xem danh sách kênh chửi lộn")
     )
     .addSubcommand(subcommand =>
@@ -29,13 +29,13 @@ module.exports = {
 
     async execute(interaction) {
         const subcommand = interaction.options.getSubcommand();
-        if (subcommand === "addChannel") {
+        if (subcommand === "addchannel") {
             const channel = interaction.options.getChannel("channel");
             await interaction.reply(`Đã thêm kênh ${channel} vào danh sách kênh chửi lộn`);
-        } else if (subcommand === "removeChannel") {
+        } else if (subcommand === "removechannel") {
             const channel = interaction.options.getChannel("channel");
             await interaction.reply(`Đã xóa kênh ${channel} khỏi danh sách kênh chửi lộn`);
-        } else if (subcommand === "listChannel") {
+        } else if (subcommand === "listchannel") {
             await interaction.reply("[WIP]");
         } else if (subcommand === "now") {
             await interaction.reply("[WIP]");

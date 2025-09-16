@@ -2,13 +2,16 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, Events, GatewayIntentBits, MessageFlags, REST, Routes } = require('discord.js');
 const config = require('./local/config.json');
-const { stringify } = require('node:querystring');
 
-const client = new Client({ intents: [
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildPresences,
     GatewayIntentBits.MessageContent,
-] });
+  ]
+});
+
 
 client.commands = new Collection();
 client.commands.release = new Collection();
@@ -36,20 +39,35 @@ for (const folder of commandFoldersRelease) {
 	}
 }
 
-for (const folder of commandFoldersBeta) {
-    const commandsPath = path.join(foldersPathBeta, folder);
-    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+for (const entry of commandFoldersBeta) {
+  const entryPath = path.join(foldersPathBeta, entry);
+  const stat = fs.statSync(entryPath);
+
+  if (stat.isDirectory()) {
+    // load all .js files inside the folder
+    const commandFiles = fs.readdirSync(entryPath).filter(file => file.endsWith('.js'));
     for (const file of commandFiles) {
-        const filePath = path.join(commandsPath, file);
-        const command = require(filePath);
-        if ('data' in command && 'execute' in command) {
-            commandsBeta.push(command.data.toJSON());
-			client.commands.beta.set(command.data.name, command);
-        } else {
-            console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
-        }
+      const filePath = path.join(entryPath, file);
+      const command = require(filePath);
+      if ('data' in command && 'execute' in command) {
+        commandsBeta.push(command.data.toJSON());
+        client.commands.beta.set(command.data.name, command);
+      } else {
+        console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+      }
     }
+  } else if (stat.isFile() && entry.endsWith('.js')) {
+    // load single file directly
+    const command = require(entryPath);
+    if ('data' in command && 'execute' in command) {
+      commandsBeta.push(command.data.toJSON());
+      client.commands.beta.set(command.data.name, command);
+    } else {
+      console.log(`[WARNING] The command at ${entryPath} is missing a required "data" or "execute" property.`);
+    }
+  }
 }
+
 
 client.on(Events.InteractionCreate, async interaction => {
     if (!interaction.isChatInputCommand()) return;
@@ -105,9 +123,7 @@ const appId = config.app_id.toString();
 	} catch (error) {
 		console.error(error);
 	}
-})();
 
-(async () => {
     try {
         console.log(`Started refreshing ${commandsBeta.length} beta application commands.`);
 
