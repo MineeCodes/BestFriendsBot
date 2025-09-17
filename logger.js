@@ -8,18 +8,18 @@ class Logger {
 
     static warn(...messages) {
         const time = new Date().toISOString();
-        console.warn(`${chalk.yellow("[WARN]")} ${messages.join(' ')}`);
+        console.warn(`${chalk.gray(`[${time}]`)} ${chalk.yellow("[WARN]")} ${messages.join(' ')}`);
     }
 
     static error(...messages) {
         const time = new Date().toISOString();
-        console.error(`${chalk.red("[ERROR]")} ${messages.join(' ')}`);
+        console.error(`${chalk.gray(`[${time}]`)} ${chalk.red("[ERROR]")} ${messages.join(' ')}`);
     }
 
     static debug(...messages) {
         if (process.env.DEBUG === "true") {
             const time = new Date().toISOString();
-            console.log(`${chalk.magenta("[DEBUG]")} ${messages.join(' ')}`);
+            console.log(`${chalk.gray(`[${time}]`)} ${chalk.magenta("[DEBUG]")} ${messages.join(' ')}`);
         }
     }
 

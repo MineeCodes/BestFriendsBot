@@ -2,12 +2,7 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 const Logger = require('./logger.js');
 
 class Database {
-    constructor() {
-        this.client = null;
-        this.db = null;
-    }
-
-    async init(uri=String) {
+    constructor(uri=String) {
         this.client = new MongoClient(uri, {
             serverApi: {
                 version: ServerApiVersion.v1,
@@ -15,6 +10,7 @@ class Database {
                 deprecationErrors: true,
             }
         });
+        this.db = null;
     }
 
     async connect(dbName=String) {
@@ -50,6 +46,14 @@ class Database {
             this.db = null;
             Logger.info("Database connection closed");
         }
+    }
+
+    async getCollection(collectionName=String) {
+        if (!this.db) {
+            Logger.warn("Connect to the database first!");
+            return null;
+        }
+        return this.db.collection(collectionName);
     }
 }
 

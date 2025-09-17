@@ -104,16 +104,14 @@ client.on(Events.InteractionCreate, async interaction => {
 client.once(Events.ClientReady, readyClient => {
 	logger.info(`Ready! Logged in as ${readyClient.user.tag}`);
     // Test connection
-    const db = new Database();
     if (!config.db_uri || !config.db_uri.startsWith("mongodb+srv://")) {
         console.logger("No valid database URL found in config, skipping test.")
     } else {
+        const db = new Database(config.db_uri);
         logger.progress("Starting DB test...");
-        db.init(config.db_uri).then(() => {
-            db.test("test").then(() => {
-                logger.progress("DB test completed.");
-            }).catch(console.error).finally(() => db.close());
-        });
+        db.test("test").then(() => {
+            logger.progress("DB test completed.");
+        }).catch(console.error).finally(() => db.close());
     }
 });
 
