@@ -1,6 +1,8 @@
 const { SlashCommandBuilder, MessageFlags, Embed, EmbedBuilder } = require('discord.js')
 const { Database } = require('../../db.js');
 const { db_uri } = require('../../local/config.json');
+const nhay = require('../../nhay.js');
+const Logger = require('../../logger.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -91,7 +93,28 @@ module.exports = {
             .setFooter({ text: `Được chạy bởi ${interaction.user.username}`});
             await interaction.editReply({ embeds: [embed] });
         } else if (subcommand === "now") {
-            await interaction.editReply("[WIP]");
+            let thing;
+            await collection.findOne({guildId}).then(async doc => {
+                if (!doc || !doc.channels || doc.channels.length === 0) {
+                    interaction.editReply("Chưa có kênh chửi lộn nào được thiết lập.");
+                    return;
+                } else {
+                    thing = doc.channels;
+                }
+            });
+            for (const channelId of thing) {
+                const channel = await interaction.client.channels.fetch(channelId).catch(() => null);
+                const nhayy = new nhay();
+                const lineCount = nhayy.getLineCount();
+                const randomLineNumber = Math.floor(Math.random() * lineCount) + 1;
+                Logger.debug(`Selected random line number: ${randomLineNumber} out of ${lineCount}`);
+                const curseMessage = nhayy.readLine(randomLineNumber);
+                Logger.debug(`Sending curse message: ${curseMessage} to channel ID: ${channelId}`);
+                if (channel && channel.isTextBased()) {
+                    channel.send(`${curseMessage}`).catch(() => null);
+                }
+            }
+            await interaction.editReply("Đã gửi xong.");
         } else {
             await interaction.editReply("Không rõ lệnh.");
         }

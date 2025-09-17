@@ -101,7 +101,7 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 
-client.once(Events.ClientReady, readyClient => {
+client.once(Events.ClientReady, async readyClient => {
 	logger.info(`Ready! Logged in as ${readyClient.user.tag}`);
     // Test connection
     if (!config.db_uri || !config.db_uri.startsWith("mongodb+srv://")) {
