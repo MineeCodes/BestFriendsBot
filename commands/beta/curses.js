@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, MessageFlags, Embed, EmbedBuilder } = require('discord.js')
 const { Database } = require('../../db.js');
-const { db_uri } = require('../../local/config.json');
+const { db_uri, app_id } = require('../../local/config.json');
 const nhay = require('../../nhay.js');
 const Logger = require('../../logger.js');
 
@@ -115,7 +115,12 @@ module.exports = {
                 }
             });
             for (const channelId of thing) {
-                const randomMember = await interaction.guild.members.fetch().then(members => members.random().id);
+                let randomMember = await interaction.guild.members.fetch().then(members => members.random().id);
+                if (randomMember === app_id) {
+                    Logger.debug("Randomly selected member is the bot itself, retrying...");
+                    randomMember = await interaction.guild.members.fetch().then(members => members.random().id);
+                    continue;
+                }
                 const channel = await interaction.client.channels.fetch(channelId).catch(() => null);
                 const nhayy = new nhay();
                 const lineCount = nhayy.getLineCount();
