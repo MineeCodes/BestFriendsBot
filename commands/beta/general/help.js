@@ -23,15 +23,8 @@ module.exports = {
                     value: command.data.description
                 });
             }
-            for (const command of client.commands.release.values()) {
-                embed.addFields({
-                    name: `/${command.data.name}`,
-                    value: command.data.description
-                });
-            }
         }
-        else {
-        }
+        else {}
         for (const command of client.commands.release.values()) {
             embed.addFields({
                 name: `/${command.data.name}`,

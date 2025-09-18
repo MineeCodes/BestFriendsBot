@@ -42,6 +42,10 @@ module.exports = {
 
         const subcommand = interaction.options.getSubcommand();
         if (subcommand === "addchannel") {
+            if (interaction.member.permissions.has("ManageChannels") === false) {
+                await interaction.editReply("Bạn không có quyền sử dụng lệnh này.");
+                return;
+            }
             const channel = interaction.options.getChannel("channel") ? interaction.options.getChannel("channel") : interaction.channel;
 
             const exists = await collection.findOne({ guildId, channels: channel.id });
@@ -59,6 +63,10 @@ module.exports = {
 
             await interaction.editReply(`Đã thêm kênh ${channel} vào danh sách kênh chửi lộn`);
         } else if (subcommand === "removechannel") {
+            if (interaction.member.permissions.has("ManageChannels") === false) {
+                await interaction.editReply("Bạn không có quyền sử dụng lệnh này.");
+                return;
+            }
             const channel = interaction.options.getChannel("channel") ? interaction.options.getChannel("channel") : interaction.channel;
 
             const exists = await collection.findOne({ guildId, channels: channel.id });
@@ -93,6 +101,10 @@ module.exports = {
             .setFooter({ text: `Được chạy bởi ${interaction.user.username}`});
             await interaction.editReply({ embeds: [embed] });
         } else if (subcommand === "now") {
+            if (interaction.member.permissions.has("ManageChannels") === false) {
+                await interaction.editReply("Bạn không có quyền sử dụng lệnh này.");
+                return;
+            }
             let thing;
             await collection.findOne({guildId}).then(async doc => {
                 if (!doc || !doc.channels || doc.channels.length === 0) {
@@ -103,6 +115,7 @@ module.exports = {
                 }
             });
             for (const channelId of thing) {
+                const randomMember = await interaction.guild.members.fetch().then(members => members.random().id);
                 const channel = await interaction.client.channels.fetch(channelId).catch(() => null);
                 const nhayy = new nhay();
                 const lineCount = nhayy.getLineCount();
@@ -111,7 +124,7 @@ module.exports = {
                 const curseMessage = nhayy.readLine(randomLineNumber);
                 Logger.debug(`Sending curse message: ${curseMessage} to channel ID: ${channelId}`);
                 if (channel && channel.isTextBased()) {
-                    channel.send(`${curseMessage}`).catch(() => null);
+                    channel.send(`<@${randomMember}> ${curseMessage}`).catch(() => null);
                 }
             }
             await interaction.editReply("Đã gửi xong.");
