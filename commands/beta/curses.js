@@ -39,6 +39,12 @@ module.exports = {
         subcommand
         .setName("stop")
         .setDescription("Dừng chửi lộn tự động")
+    )
+    .addSubcommand(subcommand =>
+        subcommand
+        .setName("now-specific")
+        .setDescription("Chửi ai đó")
+        .addUserOption(option => option.setName("member").setDescription("Thành viên muốn chửi").setRequired(false))
     ),
 
     async execute(interaction) {
@@ -126,7 +132,7 @@ module.exports = {
             });
             for (const channelId of thing) {
                 let randomMember = await interaction.guild.members.fetch().then(members => members.random().id);
-                if (randomMember === app_id) {
+                while (randomMember === app_id) {
                     Logger.debug("Randomly selected member is the bot itself, retrying...");
                     randomMember = await interaction.guild.members.fetch().then(members => members.random().id);
                     continue;
@@ -163,6 +169,30 @@ module.exports = {
                 { upsert: true }
             );
             await interaction.editReply("Đã tắt tự động chửi lộn");
+        } else if (subcommand === "now-specific") {
+            await interaction.editReply("ok đang gửi nè");
+            if (interaction.member.permissions.has("ManageMessages") === false) {
+                await interaction.editReply("Bạn không có quyền sử dụng lệnh này.");
+                return;
+            }
+            let thing;
+            const member = interaction.options.getUser("member") ? interaction.options.getUser("member").id : interaction.guild.members.fetch().then(members => members.random().id);
+            await collection.findOne({guildId}).then(async doc => {
+                if (!doc || !doc.channels || doc.channels.length === 0) {
+                    interaction.editReply("Chưa có kênh chửi lộn nào được thiết lập.");
+                    return;
+                } else {
+                    thing = doc.channels;
+                }
+            });
+            const nhayy = new nhay();
+            const curseMessage = nhayy.readRandomLine();
+            channelId = thing[Math.floor(Math.random() * thing.length)];
+            const channel = await interaction.client.channels.fetch(channelId).catch(() => null);
+            if (channel && channel.isTextBased()) {
+                channel.send(`<@${member}> ${curseMessage}`).catch(() => null);
+            }
+            await interaction.editReply("ok gửi rồi nè");
         }
         else {
             await interaction.editReply("Không rõ lệnh.");
