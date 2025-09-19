@@ -1,6 +1,7 @@
 # BestFriendsBot
 
 This is a bot that [I](https://github.com/Mineturtlee) and T.H. made, called Best Friends Bot.
+Bot is mainly Vietnamese, but commands are in English.
 
 # Usage
 

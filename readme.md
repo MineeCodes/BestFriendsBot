@@ -3,6 +3,7 @@
 > For English-speaking people: Please click [here](./readme-eng.md) to read the English version.
 
 Đây là một dự án dành cho bot mà tui và T.H làm nên, gọi là Best Friends Bot.
+Bot hoàn toàn tiếng Việt nma chỉ có lệnh là tiếng Anh
 
 # Cách sử dụng
 
