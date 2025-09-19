@@ -136,7 +136,7 @@ client.once(Events.ClientReady, async readyClient => {
 
             for (const [guildId] of guilds) {
                 guild = await client.guilds.fetch(guildId).catch(() => null);
-                let config = await db.getCollection("guild_config");
+                let config = await db.getCollection("curse_config");
                 configurate = await config.findOne({ guildId });
                 if (!guild || configurate?.enabled === false) continue;
 
