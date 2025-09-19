@@ -136,7 +136,9 @@ client.once(Events.ClientReady, async readyClient => {
 
             for (const [guildId] of guilds) {
                 guild = await client.guilds.fetch(guildId).catch(() => null);
-                if (!guild) continue;
+                let config = await db.getCollection("guild_config");
+                configurate = await config.findOne({ guildId });
+                if (!guild || configurate?.enabled === false) continue;
 
                 const doc = await collection.findOne({ guildId });
                 if (!doc || !doc.channels || doc.channels.length === 0) {

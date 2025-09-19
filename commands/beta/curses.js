@@ -29,6 +29,16 @@ module.exports = {
         subcommand
         .setName("now")
         .setDescription("Chửi ngay và luôn")
+    )
+    .addSubcommand(subcommand =>
+        subcommand
+        .setName("start")
+        .setDescription("Bắt đầu chửi lộn tự động")
+    )
+    .addSubcommand(subcommand =>
+        subcommand
+        .setName("stop")
+        .setDescription("Dừng chửi lộn tự động")
     ),
 
     async execute(interaction) {
@@ -129,7 +139,32 @@ module.exports = {
                 }
             }
             await interaction.editReply("Đã gửi xong.");
-        } else {
+        } else if (subcommand === "start") {
+            if (interaction.member.permissions.has("ManageChannels") === false) {
+                await interaction.editReply("Bạn không có quyền sử dụng lệnh này.");
+                return;
+            }
+            const collectionz = await db.getCollection("curse_config");
+            await collectionz.updateOne(
+                { guildId },
+                { $set: { enabled: true } },
+                { upsert: true }
+            );
+            await interaction.editReply("Cron job đã được bật, bot sẽ tự động chửi lộn trong các kênh đã thiết lập.");
+        } else if (subcommand === "stop") {
+            if (interaction.member.permissions.has("ManageChannels") === false) {
+                await interaction.editReply("Bạn không có quyền sử dụng lệnh này.");
+                return;
+            }
+            const collectionz = await db.getCollection("curse_config");
+            await collectionz.updateOne(
+                { guildId },
+                { $set: { enabled: false } },
+                { upsert: true }
+            );
+            await interaction.editReply("Cron job đã được tắt, bot sẽ không tự động chửi lộn trong các kênh đã thiết lập nữa.");
+        }
+        else {
             await interaction.editReply("Không rõ lệnh.");
         }
         await db.close();
