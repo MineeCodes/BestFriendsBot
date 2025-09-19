@@ -150,7 +150,7 @@ module.exports = {
                 { $set: { enabled: true } },
                 { upsert: true }
             );
-            await interaction.editReply("Cron job đã được bật, bot sẽ tự động chửi lộn trong các kênh đã thiết lập.");
+            await interaction.editReply("Đã bật tự động chửi lộn");
         } else if (subcommand === "stop") {
             if (interaction.member.permissions.has("ManageChannels") === false) {
                 await interaction.editReply("Bạn không có quyền sử dụng lệnh này.");
@@ -162,7 +162,7 @@ module.exports = {
                 { $set: { enabled: false } },
                 { upsert: true }
             );
-            await interaction.editReply("Cron job đã được tắt, bot sẽ không tự động chửi lộn trong các kênh đã thiết lập nữa.");
+            await interaction.editReply("Đã tắt tự động chửi lộn");
         }
         else {
             await interaction.editReply("Không rõ lệnh.");
