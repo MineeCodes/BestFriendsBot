@@ -33,19 +33,33 @@ const commandFoldersRelease = fs.readdirSync(foldersPathRelease);
 const foldersPathBeta = path.join(__dirname, 'commands', 'beta');
 const commandFoldersBeta = fs.readdirSync(foldersPathBeta)
 
-for (const folder of commandFoldersRelease) {
-	const commandsPath = path.join(foldersPathRelease, folder);
-	const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-	for (const file of commandFiles) {
-		const filePath = path.join(commandsPath, file);
-		const command = require(filePath);
-		if ('data' in command && 'execute' in command) {
-			commandsRelease.push(command.data.toJSON());
-			client.commands.release.set(command.data.name, command);
-		} else {
-			logger.warn(`The command at ${filePath} is missing a required "data" or "execute" property.`);
-		}
-	}
+for (const entry of commandFoldersRelease) {
+  const entryPath = path.join(foldersPathRelease, entry);
+  const stat = fs.statSync(entryPath);
+
+  if (stat.isDirectory()) {
+    // load all .js files inside the folder
+    const commandFiles = fs.readdirSync(entryPath).filter(file => file.endsWith('.js'));
+    for (const file of commandFiles) {
+      const filePath = path.join(entryPath, file);
+      const command = require(filePath);
+      if ('data' in command && 'execute' in command) {
+        commandsRelease.push(command.data.toJSON());
+        client.commands.release.set(command.data.name, command);
+      } else {
+        logger.warn(`The command at ${filePath} is missing a required "data" or "execute" property.`);
+      }
+    }
+  } else if (stat.isFile() && entry.endsWith('.js')) {
+    // load single file directly
+    const command = require(entryPath);
+    if ('data' in command && 'execute' in command) {
+      commandsRelease.push(command.data.toJSON());
+      client.commands.release.set(command.data.name, command);
+    } else {
+      logger.warn(`The command at ${entryPath} is missing a required "data" or "execute" property.`);
+    }
+  }
 }
 
 for (const entry of commandFoldersBeta) {
