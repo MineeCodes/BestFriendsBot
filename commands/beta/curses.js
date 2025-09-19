@@ -123,11 +123,7 @@ module.exports = {
                 }
                 const channel = await interaction.client.channels.fetch(channelId).catch(() => null);
                 const nhayy = new nhay();
-                const lineCount = nhayy.getLineCount();
-                const randomLineNumber = Math.floor(Math.random() * lineCount) + 1;
-                Logger.debug(`Selected random line number: ${randomLineNumber} out of ${lineCount}`);
-                const curseMessage = nhayy.readLine(randomLineNumber);
-                Logger.debug(`Sending curse message: ${curseMessage} to channel ID: ${channelId}`);
+                curseMessage = nhayy.readRandomLine();
                 if (channel && channel.isTextBased()) {
                     channel.send(`<@${randomMember}> ${curseMessage}`).catch(() => null);
                 }

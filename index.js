@@ -4,6 +4,13 @@ const { Client, Collection, Events, GatewayIntentBits, MessageFlags, REST, Route
 const config = require('./local/config.json');
 const { Database } = require('./db');
 const logger = require('./logger');
+const cron = require('node-cron');
+const nhay = require('./nhay.js');
+
+if (!config.token) {
+    logger.error("No token found in config, please set it in local/config.json");
+    process.exit(1);
+}
 
 const client = new Client({
   intents: [
@@ -102,18 +109,70 @@ client.on(Events.InteractionCreate, async interaction => {
 
 
 client.once(Events.ClientReady, async readyClient => {
-	logger.info(`Ready! Logged in as ${readyClient.user.tag}`);
-    // Test connection
+    logger.info(`Ready! Logged in as ${readyClient.user.tag}`);
+
     if (!config.db_uri || !config.db_uri.startsWith("mongodb+srv://")) {
-        console.logger("No valid database URL found in config, skipping test.")
+        logger.warn("No valid database URL found in config, skipping test.");
     } else {
         const db = new Database(config.db_uri);
         logger.progress("Starting DB test...");
-        db.test("test").then(() => {
-            logger.progress("DB test completed.");
-        }).catch(console.error).finally(() => db.close());
+        db.test("test")
+            .then(() => {
+                logger.progress("DB test completed.");
+            })
+            .catch(console.error)
+            .finally(() => db.close());
+    }
+
+    if (config.db_uri && config.db_uri.startsWith("mongodb+srv://") && config.cron_nhay) {
+        const db = new Database(config.db_uri);
+        await db.connect("BestFriendsBot");
+        const collection = await db.getCollection("curse_channels");
+
+        cron.schedule(config.cron_nhay, async () => {
+            const guilds = await client.guilds.fetch();
+            let guild;
+            let thing;
+
+            for (const [guildId] of guilds) {
+                guild = await client.guilds.fetch(guildId).catch(() => null);
+                if (!guild) continue;
+
+                const doc = await collection.findOne({ guildId });
+                if (!doc || !doc.channels || doc.channels.length === 0) {
+                    continue;
+                } else {
+                    thing = doc.channels;
+                }
+
+                for (const channelId of thing) {
+                    const nhayy = new nhay();
+                    const curseMessage = nhayy.readRandomLine();
+                    const channel = await client.channels.fetch(channelId).catch(() => null);
+                    members = await guild.members
+                    .fetch()
+                    .then(members => members.random().id);
+
+                    while (members === client.user.id) {
+                    members = await guild.members
+                        .fetch()
+                        .then(members => members.random().id);
+                    }
+
+                    if (channel && channel.isTextBased()) {
+                        channel
+                            .send(`<@${members}> ${curseMessage}`)
+                            .catch(() => null);
+                    }
+                }
+            }
+        });
+    }
+    else {
+        logger.warn("No valid database URL or cron_nhay found in config, skipping curses cron job.");
     }
 });
+
 
 logger.info('App ID:', config.app_id);      // should print the correct string
 logger.info('Guild ID:', config.dev_server); // should print the correct string
@@ -135,7 +194,11 @@ const appId = config.app_id.toString();
 	} catch (error) {
 		console.error(error);
 	}
-
+  if (!config.dev_server) {
+    logger.warn("No dev_server found in config, skipping beta commands registration.");
+    return;
+  }
+  else {
     try {
         logger.progress(`Started refreshing ${commandsBeta.length} beta application commands.`);
 
@@ -148,6 +211,7 @@ const appId = config.app_id.toString();
     } catch (error) {
         logger.error(error);
     }
+  }
 })();
 
 client.login(config.token);

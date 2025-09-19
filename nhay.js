@@ -15,11 +15,39 @@ class nhay {
         }
     }
 
+    randomize() {
+        const filePath = config.curse_file || '';
+        try {
+            const data = fs.readFileSync(filePath, 'utf8');
+            const lines = data.split('\n');
+            var lineCount = lines.length;
+        } catch (err) {
+            Logger.error(`Error reading file from disk: ${err}`);
+            return 0;
+        }
+        const randomNumber = Math.floor(Math.random() * lineCount) + 1;
+        return randomNumber;
+    }
+
     readLine(lineNumber) {
         const filePath = config.curse_file || '';
         const data = fs.readFileSync(filePath, "utf8");
         const lines = data.split(/\r?\n/);
         return lines[lineNumber - 1];
+    }
+
+    readRandomLine() {
+        const filePath = config.curse_file || '';
+        try {
+            const data = fs.readFileSync(filePath, 'utf8');
+            const lines = data.split('\n');
+            var lineCount = lines.length;
+        } catch (err) {
+            Logger.error(`Error reading file from disk: ${err}`);
+            return 0;
+        }
+        const randomNumber = Math.floor(Math.random() * lineCount) + 1;
+        return this.readLine(randomNumber);
     }
 }
 
