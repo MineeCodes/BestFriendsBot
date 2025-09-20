@@ -48,13 +48,13 @@ module.exports = {
     ),
 
     async execute(interaction) {
+        await interaction.deferReply();
+
         const db = await new Database(db_uri);
         await db.connect("BestFriendsBot");
         
         const guildId = interaction.guildId;
         const collection = await db.getCollection("curse_channels");
-
-        await interaction.deferReply();
 
         const subcommand = interaction.options.getSubcommand();
         if (subcommand === "addchannel") {
