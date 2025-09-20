@@ -132,7 +132,7 @@ module.exports = {
             });
             for (const channelId of thing) {
                 let randomMember = await interaction.guild.members.fetch().then(members => members.random().id);
-                while (randomMember === app_id) {
+                while (randomMember === app_id || randomMember === await interaction.guild.members.fetch(randomMember).then(member => member.user.bot) === true) {
                     Logger.debug("Randomly selected member is the bot itself, retrying...");
                     randomMember = await interaction.guild.members.fetch().then(members => members.random().id);
                     continue;

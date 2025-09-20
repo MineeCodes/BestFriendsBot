@@ -142,7 +142,6 @@ client.once(Events.ClientReady, async readyClient => {
         const db = new Database(config.db_uri);
         await db.connect("BestFriendsBot");
         const collection = await db.getCollection("curse_channels");
-
         cron.schedule(config.cron_nhay, async () => {
             const guilds = await client.guilds.fetch();
             let guild;
@@ -152,7 +151,7 @@ client.once(Events.ClientReady, async readyClient => {
                 guild = await client.guilds.fetch(guildId).catch(() => null);
                 let config = await db.getCollection("curse_config");
                 configurate = await config.findOne({ guildId });
-                if (!guild || configurate?.enabled === false) continue;
+                if (!guild || configurate?.enabled === false || !configurate.enabled) continue;
 
                 const doc = await collection.findOne({ guildId });
                 if (!doc || !doc.channels || doc.channels.length === 0) {
@@ -169,7 +168,7 @@ client.once(Events.ClientReady, async readyClient => {
                     .fetch()
                     .then(members => members.random().id);
 
-                    while (members === client.user.id) {
+                    while (members === client.user.id || members === await guild.members.fetch(members).then(member => member.user.bot) === true) {
                     members = await guild.members
                         .fetch()
                         .then(members => members.random().id);
