@@ -3,9 +3,11 @@ const path = require('node:path');
 const { Client, Collection, Events, GatewayIntentBits, MessageFlags, REST, Routes } = require('discord.js');
 const config = require('./local/config.json');
 const { Database } = require('./db');
-const logger = require('./logger');
+const Logger = require('./logger');
 const cron = require('node-cron');
 const nhay = require('./nhay.js');
+
+const logger = new Logger("Main");
 
 if (!config.token) {
     logger.error("No token found in config, please set it in local/config.json");
@@ -101,6 +103,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
     if (!command) {
         logger.error(`No command matching ${interaction.commandName} was found.`);
+        await interaction.reply({ content: 'Lệnh không tồn tại!', ephemeral: true });
         return;
     }
 
@@ -109,7 +112,7 @@ client.on(Events.InteractionCreate, async interaction => {
     } catch (error) {
         logger.error(`Error executing ${interaction.commandName}:`, error);
         const replyOptions = {
-            content: 'There was an error while executing this command!',
+            content: 'Đã có lỗi xảy ra khi bạn dùng lệnh này',
             ephemeral: true
         };
 

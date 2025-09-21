@@ -1,31 +1,35 @@
 const chalk = require("chalk");
 
 class Logger {
-    static info(...messages) {
-        const time = new Date().toISOString();
-        console.log(`${chalk.gray(`[${time}]`)} ${chalk.blue("[INFO]")} ${messages.join(' ')}`);
+    constructor(name="Unknown") {
+        this.name = name;
     }
 
-    static warn(...messages) {
+    info(...messages) {
         const time = new Date().toISOString();
-        console.warn(`${chalk.gray(`[${time}]`)} ${chalk.yellow("[WARN]")} ${messages.join(' ')}`);
+        console.log(`${chalk.gray(`[${time}]`)} ${chalk.cyan(`[${this.name}]`)} ${chalk.blue("[INFO]")} ${messages.join(' ')}`);
     }
 
-    static error(...messages) {
+    warn(...messages) {
         const time = new Date().toISOString();
-        console.error(`${chalk.gray(`[${time}]`)} ${chalk.red("[ERROR]")} ${messages.join(' ')}`);
+        console.warn(`${chalk.gray(`[${time}]`)} ${chalk.cyan(`[${this.name}]`)} ${chalk.yellow("[WARN]")} ${messages.join(' ')}`);
     }
 
-    static debug(...messages) {
+    error(...messages) {
+        const time = new Date().toISOString();
+        console.error(`${chalk.gray(`[${time}]`)} ${chalk.cyan(`[${this.name}]`)} ${chalk.red("[ERROR]")} ${messages.join(' ')}`);
+    }
+
+    debug(...messages) {
         if (process.env.DEBUG === "true") {
             const time = new Date().toISOString();
-            console.log(`${chalk.gray(`[${time}]`)} ${chalk.magenta("[DEBUG]")} ${messages.join(' ')}`);
+            console.log(`${chalk.gray(`[${time}]`)} ${chalk.cyan(`[${this.name}]`)} ${chalk.magenta("[DEBUG]")} ${messages.join(' ')}`);
         }
     }
 
-    static progress(...messages) {
+    progress(...messages) {
         const time = new Date().toISOString();
-        console.log(`${chalk.gray(`[${time}]`)} ${chalk.green("[PROGRESS]")} ${messages.join(' ')}`);
+        console.log(`${chalk.gray(`[${time}]`)} ${chalk.cyan(`[${this.name}]`)} ${chalk.green("[PROGRESS]")} ${messages.join(' ')}`);
     }
 }
 

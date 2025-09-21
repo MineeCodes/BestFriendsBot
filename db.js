@@ -1,6 +1,7 @@
-// update force
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const Logger = require('./logger.js');
+
+let logger = new Logger("Database");
 
 class Database {
     constructor(uri=String) {
@@ -15,23 +16,23 @@ class Database {
 
     async connect(dbName=String) {
         if (!this.client) {
-            Logger.warn("Connect to the cluster first!");
+            logger.warn("Connect to the cluster first!");
             return;
         }
         await this.client.connect();
         this.db = this.client.db(dbName);
-        Logger.info("Connected to database: ", dbName);
+        logger.info("Connected to database: ", dbName);
         return this.db;
     }
 
     async test(db_name=String) {
         if (!this.client) {
-            Logger.warn("Connect to the cluster first!");
+            logger.warn("Connect to the cluster first!");
             return;
         }
         try {
             await this.client.db(db_name).command({ ping: 1 });
-            Logger.info("Pinged your deployment. You successfully connected to MongoDB!");
+            logger.info("Pinged your deployment. You successfully connected to MongoDB!");
         } catch (e) {
             console.error(e);
         } finally {
@@ -44,13 +45,13 @@ class Database {
             await this.client.close();
             this.client = null;
             this.db = null;
-            Logger.info("Database connection closed");
+            logger.info("Database connection closed");
         }
     }
 
     async getCollection(collectionName=String) {
         if (!this.db) {
-            Logger.warn("Connect to the database first!");
+            logger.warn("Connect to the database first!");
             return null;
         }
         return this.db.collection(collectionName);
