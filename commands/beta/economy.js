@@ -12,7 +12,17 @@ module.exports = {
                 .setName("balance")
                 .setDescription("Xem số dư của bạn hoặc ai đó")
                 .addUserOption(option => option.setName("user").setDescription("Thành viên muốn xem số dư").setRequired(false))
-        ),
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName("daily")
+                .setDescription("Nhận phần thưởng hàng ngày")
+            )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName("reset")
+                .setDescription("Đặt lại số dư của bạn (hoặc ai đó nếu bạn là admin)")
+            ),
     
     async execute(interaction) {
         await interaction.deferReply();
@@ -52,6 +62,71 @@ module.exports = {
             await interaction.editReply({ embeds: [embed] });
             return;
         }
+    } else if (interaction.options.getSubcommand() === "daily") {
+        const member = interaction.user.id;
+        let now = Date.now();
+        const random = Math.floor(Math.random() * 15) + 100;
+        let userData = await economy.findOne({member});
+        let wallet = userData?.wallet || 0;
+        wallet += random
+        let bank = userData?.bank || 0;
+        if (!userData || !userData.lastDaily) {
+            await economy.updateOne(
+                { member },
+                { $set: { wallet: wallet, bank: bank, lastDaily: now } },
+                { upsert: true }
+            );
+            const embed = new EmbedBuilder()
+                .setTitle("Phần thưởng hàng ngày")
+                .setDescription(`Bạn đã nhận phần thưởng hàng ngày là **${random} xu**! Hãy quay lại sau 24 giờ để nhận thêm.`)
+                .setColor("Green")
+                .setTimestamp();
+            await interaction.editReply({ embeds: [embed] });
+            return;
+        } else {
+            if (userData.lastDaily) {
+                const lastDaily = new Date(userData.lastDaily);
+                const diffTime = Math.abs(now - lastDaily);
+                const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
+                if (diffHours < 24) {
+                    const nextDaily = new Date(lastDaily.getTime() + 24 * 60 * 60 * 1000);
+                    const embed = new EmbedBuilder()
+                        .setTitle("Phần thưởng hàng ngày")
+                        .setDescription(`Bạn đã nhận phần thưởng của hôm nay rồi! Sử dụng lệnh sau <t:${Math.floor(nextDaily.getTime() / 1000)}:R> để nhận lại.`)
+                        .setColor("Red")
+                        .setTimestamp();
+                    await interaction.editReply({ embeds: [embed] });
+                    return;
+                } else {
+                    await economy.updateOne(
+                        { member },
+                        { $set: { wallet: wallet, bank: bank, lastDaily: now } },
+                        { upsert: true }
+                    );
+                    const embed = new EmbedBuilder()
+                        .setTitle("Phần thưởng hàng ngày")
+                        .setDescription(`Bạn đã nhận phần thưởng hàng ngày là **${random} xu**! Hãy quay lại sau 24 giờ để nhận thêm.`)
+                        .setColor("Green")
+                        .setTimestamp();
+                    await interaction.editReply({ embeds: [embed] });
+                    return;
+                }
+            }
+        }
+    } else if (interaction.options.getSubcommand() === "reset") {
+        const member = interaction.user.id;
+        await economy.updateOne(
+            { member },
+            { $set: { wallet: 0, bank: 0, lastDaily: null } },
+            { upsert: true }
+        );
+        const embed = new EmbedBuilder()
+            .setTitle("Đã đặt lại số dư")
+            .setDescription(`Số dư của bạn đã được đặt lại tất cả về 0`)
+            .setColor("Orange")
+            .setTimestamp();
+        await interaction.editReply({ embeds: [embed] });
+        return;
     } else {
         await interaction.editReply("Lệnh phụ không xác định");
     }
