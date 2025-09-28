@@ -1,4 +1,4 @@
-const { EmbedBuilder, SlashCommandBuilder } = require("discord.js");
+const { EmbedBuilder, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder } = require("discord.js");
 const { Database } = require("../../db.js");
 const { db_uri } = require("../../local/config.json");
 const Logger = require("../../logger.js");
@@ -22,6 +22,23 @@ module.exports = {
             subcommand
                 .setName("reset")
                 .setDescription("Đặt lại số dư của bạn (hoặc ai đó nếu bạn là admin)")
+            )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName("weekly")
+                .setDescription("Nhận phần thưởng hàng tuần")
+            )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName("deposit")
+                .setDescription("Gửi tiền từ ví vào ngân hàng")
+                .addIntegerOption(option => option.setName("amount").setDescription("Số tiền muốn gửi").setRequired(true))
+            )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName("withdraw")
+                .setDescription("Rút tiền từ ngân hàng vào ví")
+                .addIntegerOption(option => option.setName("amount").setDescription("Số tiền muốn rút").setRequired(true))
             ),
     
     async execute(interaction) {
@@ -49,7 +66,18 @@ module.exports = {
                 .setDescription(`**Ví:** 0 xu\n**Ngân hàng:** 0 xu`)
                 .setColor("Random")
                 .setTimestamp();
-            await interaction.editReply({ embeds: [embed] });
+            const buttons = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('deposit')
+                        .setLabel('Gửi tiền')
+                        .setStyle('Primary'),
+                    new ButtonBuilder()
+                        .setCustomId('withdraw')
+                        .setLabel('Rút tiền')
+                        .setStyle('Primary'),
+                );
+            await interaction.editReply({ embeds: [embed], components: [buttons] });
             return;
         } else {
             const embed = new EmbedBuilder()
@@ -127,6 +155,57 @@ module.exports = {
             .setTimestamp();
         await interaction.editReply({ embeds: [embed] });
         return;
+    } else if (interaction.options.getSubcommand() === "weekly") {
+        const member = interaction.user.id;
+        let now = Date.now();
+        const random = Math.floor(Math.random() * 100) + 500;
+        let userData = await economy.findOne({member});
+        let wallet = userData?.wallet || 0;
+        wallet += random
+        let bank = userData?.bank || 0;
+        if (!userData || !userData.lastWeekly) {
+            await economy.updateOne(
+                { member },
+                { $set: { wallet: wallet, bank: bank, lastWeekly: now } },
+                { upsert: true }
+            );
+            const embed = new EmbedBuilder()
+                .setTitle("Phần thưởng hàng tuần")
+                .setDescription(`Bạn đã nhận phần thưởng hàng tuần là **${random} xu**! Hãy quay lại sau 7 ngày để nhận thêm.`)
+                .setColor("Green")
+                .setTimestamp();
+            await interaction.editReply({ embeds: [embed] });
+            return;
+        } else {
+            if (userData.lastWeekly) {
+                const lastWeekly = new Date(userData.lastWeekly);
+                const diffTime = Math.abs(now - lastWeekly);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (diffDays < 7) {
+                    const nextWeekly = new Date(lastWeekly.getTime() + 7 * 24 * 60 * 60 * 1000);
+                    const embed = new EmbedBuilder()
+                        .setTitle("Phần thưởng hàng tuần")
+                        .setDescription(`Bạn đã nhận phần thưởng của tuần này rồi! Sử dụng lệnh sau <t:${Math.floor(nextWeekly.getTime() / 1000)}:R> để nhận lại.`)
+                        .setColor("Red")
+                        .setTimestamp();
+                    await interaction.editReply({ embeds: [embed] });
+                    return;
+                } else {
+                    await economy.updateOne(
+                        { member },
+                        { $set: { wallet: wallet, bank: bank, lastWeekly: now } },
+                        { upsert: true }
+                    );
+                    const embed = new EmbedBuilder()
+                        .setTitle("Phần thưởng hàng tuần")
+                        .setDescription(`Bạn đã nhận phần thưởng hàng tuần là **${random} xu**! Hãy quay lại sau 7 ngày để nhận thêm.`)
+                        .setColor("Green")
+                        .setTimestamp();
+                    await interaction.editReply({ embeds: [embed] });
+                    return;
+                }
+            }
+        }
     } else {
         await interaction.editReply("Lệnh phụ không xác định");
     }
